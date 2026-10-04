@@ -6,6 +6,8 @@ import { uploadFile } from '../../lib/media';
 import { StarsView, StarsInput } from '../../components/Stars';
 import FallingHearts from '../../components/FallingHearts';
 
+const safeHref = (u) => (/^(https?:\/\/|tel:|mailto:)/i.test(u || '') ? u : null);
+
 const fmt = (d) =>
   new Date(d).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -128,6 +130,7 @@ export default function ReviewPage() {
 
   const s = settings || {};
   const accent = s.accent_color || '#2F80ED';
+  const contacts = (Array.isArray(s.contacts) ? s.contacts : []).filter((c) => c.label && safeHref(c.url));
 
   return (
     <div style={{ '--accent': accent }}>
@@ -224,6 +227,25 @@ export default function ReviewPage() {
             </div>
           </section>
         </div>
+
+        {contacts.length > 0 && (
+          <section className="card contact" aria-labelledby="contact-title">
+            <h2 id="contact-title">ติดต่อ</h2>
+            <div className="contact-list">
+              {contacts.map((c, i) => (
+                <a
+                  key={i}
+                  className="btn contact-btn"
+                  href={safeHref(c.url)}
+                  target={/^https?:/i.test(c.url) ? '_blank' : undefined}
+                  rel="noreferrer"
+                >
+                  {c.label}
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       {s.footer_text && <p className="footer">{s.footer_text}</p>}

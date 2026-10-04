@@ -39,6 +39,18 @@ export default function SettingsTab() {
 
   const set = (patch) => setS((cur) => ({ ...cur, ...patch }));
 
+  const contacts = Array.isArray(s.contacts) ? s.contacts : [];
+  const setContact = (i, patch) => set({ contacts: contacts.map((c, j) => (j === i ? { ...c, ...patch } : c)) });
+  const addContact = () => set({ contacts: [...contacts, { label: '', url: '' }] });
+  const removeContact = (i) => set({ contacts: contacts.filter((_, j) => j !== i) });
+  const moveContact = (i, d) => {
+    const j = i + d;
+    if (j < 0 || j >= contacts.length) return;
+    const a = [...contacts];
+    [a[i], a[j]] = [a[j], a[i]];
+    set({ contacts: a });
+  };
+
   const upload = (field, folder) => async (e) => {
     const f = e.target.files[0];
     e.target.value = '';
@@ -54,6 +66,12 @@ export default function SettingsTab() {
 
   async function save(e) {
     e.preventDefault();
+    const cleaned = contacts
+      .map((c) => ({ label: (c.label || '').trim(), url: (c.url || '').trim() }))
+      .filter((c) => c.label && c.url);
+    if (cleaned.some((c) => !/^(https?:\/\/|tel:|mailto:)/i.test(c.url))) {
+      return setMsg({ type: 'error', text: 'ลิงก์ช่องทางติดต่อต้องขึ้นต้นด้วย https:// หรือ tel: หรือ mailto:' });
+    }
     setBusy(true);
     const row = {
       site_name: s.site_name.trim() || 'Fourzent',
@@ -65,6 +83,7 @@ export default function SettingsTab() {
       accent_color: s.accent_color || '#2F80ED',
       reviews_open: s.reviews_open,
       footer_text: s.footer_text || '',
+      contacts: cleaned,
     };
     const { error } = await supabase.from('site_settings').update(row).eq('id', 1);
     setBusy(false);
@@ -73,6 +92,7 @@ export default function SettingsTab() {
     const stale = ['cover_url', 'gif_url', 'music_url'].map((k) => (saved[k] && saved[k] !== row[k] ? saved[k] : null));
     removeByUrls(stale);
     setSaved({ ...s, ...row });
+    set({ contacts: cleaned });
     setMsg({ type: 'ok', text: 'บันทึกการตั้งค่าแล้ว' });
   }
 
@@ -123,6 +143,24 @@ export default function SettingsTab() {
         <div className="field">
           <label htmlFor="s-foot">ข้อความท้ายเว็บ</label>
           <input id="s-foot" type="text" value={s.footer_text || ''} onChange={(e) => set({ footer_text: e.target.value })} />
+        </div>
+        <div className="field">
+          <label>ช่องทางติดต่อ</label>
+          {contacts.map((c, i) => (
+            <div className="contact-row" key={i}>
+              <input type="text" placeholder="ชื่อปุ่ม เช่น LINE" aria-label={`ชื่อช่องทางที่ ${i + 1}`}
+                value={c.label || ''} onChange={(e) => setContact(i, { label: e.target.value })} />
+              <input type="text" placeholder="ลิงก์ เช่น https://line.me/ti/p/xxxx" aria-label={`ลิงก์ช่องทางที่ ${i + 1}`}
+                value={c.url || ''} onChange={(e) => setContact(i, { url: e.target.value })} />
+              <div className="row-actions" style={{ marginTop: 0 }}>
+                <button type="button" className="ghost small" aria-label="เลื่อนขึ้น" onClick={() => moveContact(i, -1)}>↑</button>
+                <button type="button" className="ghost small" aria-label="เลื่อนลง" onClick={() => moveContact(i, 1)}>↓</button>
+                <button type="button" className="danger small" onClick={() => removeContact(i)}>ลบ</button>
+              </div>
+            </div>
+          ))}
+          <button type="button" className="ghost small" onClick={addContact}>เพิ่มช่องทางติดต่อ</button>
+          <p className="hint" style={{ marginTop: '0.5rem' }}>ลิงก์ขึ้นต้นด้วย https:// หรือ tel:เบอร์โทร หรือ mailto:อีเมล</p>
         </div>
         <label className="check field">
           <input type="checkbox" checked={!!s.reviews_open} onChange={(e) => set({ reviews_open: e.target.checked })} />

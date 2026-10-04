@@ -27,6 +27,7 @@ create table if not exists public.site_settings (
   accent_color text not null default '#2F80ED',
   reviews_open boolean not null default true,
   footer_text text default '',
+  contacts jsonb not null default '[]'::jsonb,
   updated_at timestamptz default now()
 );
 insert into public.site_settings (id) values (1) on conflict do nothing;

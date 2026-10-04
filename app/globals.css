@@ -133,3 +133,9 @@ label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3r
 @keyframes fall { to { transform: translate(var(--drift), calc(100vh + 80px)) rotate(25deg); } }
 @media (prefers-reduced-motion: reduce) { .hearts { display: none; } }
 .hero, .wrap, .footer { position: relative; z-index: 1; }
+
+/* ---------- ช่องทางติดต่อ ---------- */
+.contact { margin-top: 1.5rem; }
+.contact-list { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.9rem; }
+.contact-btn { display: inline-block; text-decoration: none; }
+.contact-row { display: grid; gap: 0.5rem; margin-bottom: 0.9rem; padding-bottom: 0.9rem; border-bottom: 1px solid var(--line); }
